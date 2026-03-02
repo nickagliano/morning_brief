@@ -1,0 +1,20 @@
+[package]
+name        = "morning_brief"
+version     = "0.1.0"
+description = "Texts you a summary of your todo list every morning at 9am ET"
+authors     = ["nickagliano"]
+license     = "MIT"
+platform    = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+
+[eps]
+customization_guide = "CUSTOMIZE.md"
+
+[system-dependencies]
+brew = ["rustup"]
+apt  = ["cargo"]
+
+[service]
+enabled      = true
+start        = "HOST=$(tailscale ip -4) ./serve.sh"
+port         = 5544
+health_check = "GET /health"
