@@ -1,8 +1,15 @@
-use axum::{routing::get, Json, Router};
+use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
 use chrono::{Duration, NaiveTime, TimeZone, Utc};
 use chrono_tz::America::New_York;
 use serde::Deserialize;
 use serde_json::{json, Value};
+
+#[derive(Clone)]
+struct AppState {
+    todo_url: String,
+    txtme_url: String,
+    client: reqwest::Client,
+}
 
 #[derive(Deserialize)]
 struct Task {
@@ -19,17 +26,48 @@ async fn main() {
     let txtme_key = std::env::var("TXTME_API_KEY").unwrap_or_default();
     let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(5544);
 
+    let state = AppState {
+        todo_url: todo_url.clone(),
+        txtme_url: txtme_url.clone(),
+        client: reqwest::Client::new(),
+    };
+
     tokio::spawn(scheduler_loop(todo_url, txtme_url, txtme_key));
 
-    let app = Router::new().route("/health", get(health));
+    let app = Router::new()
+        .route("/health", get(health))
+        .with_state(state);
     let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".into());
     let listener = tokio::net::TcpListener::bind(format!("{host}:{port}")).await.unwrap();
     println!("[morning_brief] listening on :{port}");
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn health() -> Json<Value> {
-    Json(json!({"status": "ok"}))
+async fn health(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
+    let timeout = std::time::Duration::from_secs(2);
+
+    let txtme_ok = state.client
+        .get(format!("{}/health", state.txtme_url))
+        .timeout(timeout)
+        .send().await
+        .map(|r| r.status().is_success())
+        .unwrap_or(false);
+
+    let todo_ok = state.client
+        .get(format!("{}/health", state.todo_url))
+        .timeout(timeout)
+        .send().await
+        .map(|r| r.status().is_success())
+        .unwrap_or(false);
+
+    let all_ok = txtme_ok && todo_ok;
+    let code = if all_ok { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
+
+    (code, Json(json!({
+        "status": if all_ok { "ok" } else { "degraded" },
+        "txtme": if txtme_ok { "ok" } else { "unreachable" },
+        "simple_todo": if todo_ok { "ok" } else { "unreachable" },
+    })))
 }
 
 async fn scheduler_loop(todo_url: String, txtme_url: String, txtme_key: String) {
@@ -67,7 +105,7 @@ fn truncate(s: &str, max: usize) -> String {
     if s.chars().count() <= max {
         s.to_string()
     } else {
-        format!("{}…", s.chars().take(max).collect::<String>())
+        format!("{}...", s.chars().take(max).collect::<String>())
     }
 }
 
