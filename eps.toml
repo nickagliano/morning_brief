@@ -1,10 +1,11 @@
 [package]
 name        = "morning_brief"
-version     = "0.1.0"
-description = "Texts you a summary of your todo list every morning at 9am ET"
+version     = "0.1.1"
+description = "Texts you a summary of your todo list every morning at 7am ET"
 authors     = ["nickagliano"]
 license     = "MIT"
 platform    = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+repository  = "https://github.com/nickagliano/morning_brief"
 
 [eps]
 customization_guide = "CUSTOMIZE.md"
