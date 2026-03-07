@@ -1,4 +1,5 @@
 use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
+use tower_http::trace::TraceLayer;
 use chrono::{Duration, NaiveTime, TimeZone, Utc};
 use chrono_tz::America::New_York;
 use serde::Deserialize;
@@ -19,6 +20,7 @@ struct Task {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt::init();
     dotenvy::dotenv().ok();
 
     let todo_url  = std::env::var("SIMPLE_TODO_URL").unwrap_or_else(|_| "http://localhost:8765".into());
@@ -36,6 +38,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/health", get(health))
+        .layer(TraceLayer::new_for_http())
         .with_state(state);
     let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".into());
     let listener = tokio::net::TcpListener::bind(format!("{host}:{port}")).await.unwrap();
@@ -88,7 +91,7 @@ async fn scheduler_loop(todo_url: String, txtme_url: String, txtme_key: String) 
 
 fn secs_until_9am_eastern() -> std::time::Duration {
     let now_et  = Utc::now().with_timezone(&New_York);
-    let nine_am = NaiveTime::from_hms_opt(9, 0, 0).unwrap();
+    let nine_am = NaiveTime::from_hms_opt(7, 0, 0).unwrap();
 
     let target_date = if now_et.time() < nine_am {
         now_et.date_naive()
