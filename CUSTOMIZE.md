@@ -1,17 +1,17 @@
 # morning_brief — Customization Guide
 
-morning_brief is a scheduled notification daemon. Every day at 9am Eastern it fetches
-your incomplete todos from simple_todo and texts you a summary via txtme. It ships with
-a hardcoded 9am ET schedule and a plain-text message format — both are ports.
+morning_brief is a scheduled notification daemon. Every day at 7am Eastern it fetches
+your incomplete todos from todo and texts you a summary via txtme. It ships with
+a hardcoded 7am ET schedule and a plain-text message format — both are ports.
 
 ## Ports
 
 ### `NOTIFY_TIME` / schedule
 
 **What it does:** Controls when the daily brief fires.
-**Default:** 9:00am America/New_York, hardcoded in `src/main.rs`.
-**How to customize:** Edit `secs_until_9am_eastern()` in `src/main.rs`. To change
-the time, replace the `NaiveTime::from_hms_opt(9, 0, 0)` values. To change the
+**Default:** 7:00am America/New_York, hardcoded in `src/main.rs`.
+**How to customize:** Edit `secs_until_7am_eastern()` in `src/main.rs`. To change
+the time, replace the `NaiveTime::from_hms_opt(7, 0, 0)` values. To change the
 timezone, replace `chrono_tz::America::New_York` with any tz from the `chrono-tz` crate
 (e.g. `chrono_tz::America::Los_Angeles`).
 

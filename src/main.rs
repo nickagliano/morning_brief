@@ -75,7 +75,7 @@ async fn health(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
 
 async fn scheduler_loop(todo_url: String, txtme_url: String, txtme_key: String) {
     loop {
-        let wait = secs_until_9am_eastern();
+        let wait = secs_until_7am_eastern();
         println!("[morning_brief] next brief in {}m", wait.as_secs() / 60);
         tokio::time::sleep(wait).await;
 
@@ -89,7 +89,7 @@ async fn scheduler_loop(todo_url: String, txtme_url: String, txtme_key: String) 
     }
 }
 
-fn secs_until_9am_eastern() -> std::time::Duration {
+fn secs_until_7am_eastern() -> std::time::Duration {
     let now_et  = Utc::now().with_timezone(&New_York);
     let nine_am = NaiveTime::from_hms_opt(7, 0, 0).unwrap();
 
